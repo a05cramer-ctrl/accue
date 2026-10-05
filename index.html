@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accrue — The token that pays you when anyone trades</title>
+<meta name="description" content="Accrue: creator fees fill the Vault, stakers collect the SOL, part of it burns $ACCRUE.">
+<meta property="og:title" content="Accrue — Every trade pays.">
+<meta property="og:description" content="Creator fees fill the Vault. You stake, you collect the SOL. Part of it burns $ACCRUE.">
+<meta property="og:image" content="og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="og.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff6b57'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23070a0a' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070a0a;--ink:#ecf3f0;--mut:rgba(236,243,240,.62);--dim:rgba(236,243,240,.36);--acc:#ff6b57;--acc2:#ffb199;--line:rgba(255,255,255,.1);--card:rgba(13,19,18,.74);--r:22px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.mono{font-family:'DM Mono',ui-monospace,monospace}
+#bg{position:fixed;inset:0;z-index:-3;background:#070a0a}
+#bgB{position:fixed;inset:0;z-index:-2;opacity:0;background:
+ radial-gradient(60% 50% at 18% 18%,#1d5a55 0%,transparent 70%),
+ radial-gradient(48% 42% at 88% 28%,#3b2a22 0%,transparent 70%),
+ radial-gradient(70% 55% at 62% 100%,#0f3330 0%,transparent 72%),
+ radial-gradient(40% 40% at 0% 80%,#27403a 0%,transparent 70%),#0b1514}
+#grain{position:fixed;inset:-50%;z-index:-1;pointer-events:none;opacity:.09;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* nav */
+.nav{position:fixed;z-index:50;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;background:rgba(10,14,14,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line)}
+.brand{display:flex;align-items:center;min-height:44px;gap:8px;padding:0 14px 0 10px;text-decoration:none;font-weight:800;letter-spacing:-.03em;font-size:19px}
+.brand svg{width:26px;height:26px}
+.nav a.l{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:var(--mut);text-decoration:none;font-size:15px;font-weight:500;border-radius:999px}
+.nav a.l:hover{color:var(--ink)}
+.pill{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 22px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;transition:transform .15s,filter .15s}
+.pill:hover{transform:translateY(-1px);filter:brightness(1.07)}
+.pill.acc{background:linear-gradient(180deg,#ff8470,#ff5a44);color:#1a0b08;box-shadow:0 6px 24px -6px rgba(255,107,87,.6)}
+.pill.dk{background:linear-gradient(180deg,#2a3231,#1b2221);color:var(--ink);border:1px solid var(--line)}
+.pill.lg{min-height:54px;padding:0 30px;font-size:17px}
+/* hero */
+#hero{height:430vh;position:relative}
+.stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
+#gl{position:absolute;inset:0;width:100%;height:100%}
+.h1{position:absolute;left:0;right:0;top:50%;transform:translateY(-52%);text-align:center;font-weight:800;font-size:clamp(70px,15.5vw,236px);line-height:.84;letter-spacing:-.055em;pointer-events:none;will-change:opacity,transform;text-shadow:0 10px 70px rgba(0,0,0,.5)}
+.subs{position:absolute;left:max(24px,6vw);bottom:9vh;font-weight:700;font-size:clamp(20px,2.6vw,38px);line-height:1.12;letter-spacing:-.035em;color:var(--mut);max-width:15em}
+.subs span{display:block}.subs .a{color:var(--acc)}
+.stmt{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:min(92vw,17em);text-align:center;font-weight:700;font-size:clamp(34px,6.4vw,100px);line-height:1;letter-spacing:-.045em;pointer-events:none}
+.stmt .w{opacity:.14;transition:none}
+.final{position:absolute;left:0;right:0;bottom:7vh;display:flex;flex-direction:column;align-items:center;gap:20px;padding:0 24px;text-align:center}
+.final p{max-width:34em;color:var(--mut);font-size:clamp(15px,1.4vw,18px)}
+.final .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center}
+.final a.t{color:var(--ink);font-weight:600;text-decoration:none;border-bottom:1px solid var(--dim);padding:10px 2px}
+/* sections */
+section.s{position:relative;padding:clamp(80px,12vw,160px) 0 0}
+.wrap{width:min(1240px,100% - 48px);margin:0 auto}
+.hd h2{font-size:clamp(40px,6.4vw,92px);font-weight:800;line-height:.95;letter-spacing:-.05em}
+.hd p{margin-top:16px;color:var(--mut);font-size:clamp(16px,1.5vw,19px);max-width:40em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+/* flow */
+.flow{margin-top:clamp(36px,5vw,64px);display:grid;grid-template-columns:1.15fr 1fr;gap:24px;padding:clamp(18px,3vw,36px)}
+.flow canvas{width:100%;aspect-ratio:640/430;display:block}
+.steps{display:flex;flex-direction:column;justify-content:center;gap:6px;list-style:none}
+.steps li{display:grid;grid-template-columns:32px 1fr;gap:4px 8px;padding:14px 10px;border-radius:14px;cursor:pointer;opacity:.4;transition:opacity .3s,background .3s}
+.steps li.on{opacity:1}
+.steps .n{font-family:'DM Mono',monospace;font-size:12px;color:var(--acc);padding-top:6px}
+.steps h3{font-size:clamp(20px,2vw,26px);letter-spacing:-.03em;font-weight:700;line-height:1.15}
+.steps p{grid-column:2;color:var(--mut);font-size:15px}
+.bar{height:2px;background:var(--line);margin:8px 10px 0;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:25%;background:var(--acc);transition:transform .5s;transform-origin:left}
+/* rules */
+.grid6{margin-top:clamp(36px,5vw,64px);display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.rc{padding:22px 22px 26px;display:flex;flex-direction:column;gap:14px;min-height:340px}
+.rc h3{font-size:25px;letter-spacing:-.035em;line-height:1.1;font-weight:700}
+.rc p{color:var(--mut);font-size:15px}
+.dg{height:140px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;gap:10px;padding:0 12px;font-family:'DM Mono',monospace;font-size:12.5px;color:var(--mut);position:relative;overflow:hidden}
+.nd{border:1px solid var(--line);border-radius:999px;padding:6px 11px;background:rgba(255,255,255,.04);white-space:nowrap;color:var(--ink)}
+.nd.a{border-color:rgba(255,107,87,.6);color:var(--acc2)}
+.nd.c{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;padding:0;border-color:rgba(255,107,87,.55)}
+.ar{width:30px;height:2px;background:repeating-linear-gradient(90deg,var(--acc) 0 5px,transparent 5px 10px);background-size:20px 2px;animation:dash 1s linear infinite;flex:none}
+@keyframes dash{to{background-position:20px 0}}
+.strike{text-decoration:line-through;color:var(--dim)}
+.tag{position:absolute;right:10px;bottom:8px;color:var(--acc2);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+.bars{display:flex;align-items:flex-end;gap:14px;height:86px}
+.bars div{width:34px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--acc),#7a2e24);position:relative}
+.bars div span{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:5px;font-size:10px;color:var(--mut)}
+.res{width:46px;height:70px;border:1px solid rgba(255,107,87,.5);border-radius:8px;position:relative;overflow:hidden}
+.res i{position:absolute;left:0;right:0;bottom:0;height:100%;background:linear-gradient(180deg,rgba(255,107,87,.7),rgba(255,107,87,.25));animation:drain 4s ease-in-out infinite}
+@keyframes drain{0%{height:100%}60%{height:60%}100%{height:100%}}
+.slot{animation:slide 3.4s ease-in-out infinite}
+@keyframes slide{0%,25%{transform:none;opacity:1}60%,100%{transform:translateX(-26px);opacity:.25}}
+/* calc */
+.calc{margin-top:clamp(36px,5vw,64px);display:grid;grid-template-columns:1fr 1.25fr;gap:28px;padding:clamp(20px,3vw,38px)}
+.ctrl{display:flex;flex-direction:column;gap:26px}
+.ctrl label{display:block}
+.lab{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;color:var(--mut);font-size:15px}
+.lab b{color:var(--ink);font-size:22px;letter-spacing:-.03em;font-weight:700}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--acc) var(--v,50%),rgba(255,255,255,.14) var(--v,50%))}
+input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:rgba(255,255,255,.14)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:4px;background:var(--acc)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-10px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:0}
+.note{color:var(--dim);font-size:13px}
+.seg{display:inline-flex;gap:4px;padding:4px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+.seg button{min-height:40px;padding:0 16px;border-radius:999px;color:var(--mut);font-size:14px;font-weight:600}
+.seg button.on{background:var(--ink);color:#0a0f0e}
+.out .big{font-size:clamp(48px,7vw,92px);font-weight:800;letter-spacing:-.055em;line-height:1;margin:8px 0}
+.out .small{color:var(--mut);font-size:14px;font-family:'DM Mono',monospace}
+.chart{margin-top:18px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);padding:12px 12px 6px;position:relative;touch-action:none}
+.chart svg{width:100%;height:auto;display:block}
+.chart .d{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);padding:2px 4px}
+/* demo */
+.demo{margin-top:clamp(36px,5vw,64px);padding:clamp(18px,3vw,34px)}
+.wal{display:flex;flex-wrap:wrap;align-items:center;gap:10px 28px;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.chip{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:999px;border:1px solid rgba(255,107,87,.55);color:var(--acc2)}
+.wal div.k{color:var(--mut);font-size:14px}.wal div.k b{display:block;color:var(--ink);font-size:24px;letter-spacing:-.03em}
+.wal .sp{flex:1}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.mv{padding:22px;border-radius:18px;border:1px solid var(--line);background:rgba(0,0,0,.24);display:flex;flex-direction:column;gap:14px}
+.mv h3{font-size:28px;letter-spacing:-.04em}
+.mv p{color:var(--mut);font-size:14.5px}
+.kv{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);font-family:'DM Mono',monospace}
+.kv b{color:var(--ink);font-weight:500}
+.ring{width:96px;height:96px;flex:none}
+.rg{display:flex;align-items:center;gap:16px}
+.btn{min-height:48px;border-radius:999px;font-weight:700;background:var(--ink);color:#0a0f0e;padding:0 22px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.acc{background:linear-gradient(180deg,#ff8470,#ff5a44);color:#1a0b08}
+.lnk{color:var(--mut);text-decoration:underline;text-underline-offset:4px;font-size:14px;min-height:44px}
+/* faq */
+.faq{margin-top:clamp(30px,4vw,56px);border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 4px;font-size:clamp(19px,2vw,26px);letter-spacing:-.03em;font-weight:600;min-height:44px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary:after{content:'+';font-size:30px;font-weight:300;color:var(--acc);transition:transform .25s}
+.faq details[open] summary:after{transform:rotate(45deg)}
+.faq p{padding:0 4px 26px;color:var(--mut);max-width:42em;font-size:16px}
+/* cta */
+.cta{text-align:center;padding:clamp(120px,16vw,220px) 24px clamp(80px,10vw,140px)}
+.cta h2{font-size:clamp(56px,11vw,168px);font-weight:800;letter-spacing:-.06em;line-height:.88}
+.cta p{margin:20px 0 34px;color:var(--mut);font-size:clamp(17px,1.8vw,22px)}
+.cta .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+footer{border-top:1px solid var(--line);padding:38px 0 60px;background:rgba(5,8,8,.5)}
+.fr{display:flex;flex-wrap:wrap;gap:20px 40px;justify-content:space-between;align-items:center}
+.fr nav{display:flex;flex-wrap:wrap;gap:6px 22px;color:var(--mut);font-size:15px}
+.fr nav a{text-decoration:none;padding:10px 0;min-height:44px;display:inline-flex;align-items:center}
+.fr nav a:hover{color:var(--ink)}
+.fr nav em{font-style:normal;color:var(--dim);font-size:12px;font-family:'DM Mono',monospace;align-self:center}
+.cab{display:flex;align-items:center;gap:10px;margin-top:26px;font-family:'DM Mono',monospace;font-size:12.5px;color:var(--mut);flex-wrap:wrap}
+.cab code{word-break:break-all}
+.cp{border:1px solid var(--line);border-radius:999px;padding:0 14px;min-height:44px;font-size:13px;color:var(--ink)}
+.disc{margin-top:22px;color:var(--dim);font-size:13px;max-width:60em}
+/* modal */
+.mdl{position:fixed;inset:0;z-index:100;background:rgba(3,5,5,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.mdl.on{display:flex}
+.mb{width:min(480px,100%);padding:28px;border-radius:26px;background:#0e1413;border:1px solid var(--line);position:relative}
+.mb h3{font-size:30px;letter-spacing:-.04em}
+.mb p{color:var(--mut);font-size:15px;margin:6px 0 18px}
+.cabx{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px 10px 10px 14px;font-family:'DM Mono',monospace;font-size:12.5px;word-break:break-all;margin-bottom:16px}
+.cabx span{flex:1}
+.ap{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ap a{display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;border:1px solid var(--line);text-decoration:none;font-weight:600;background:rgba(255,255,255,.03)}
+.ap a:hover{border-color:rgba(255,107,87,.6)}
+.x{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;font-size:22px;color:var(--mut)}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+@media(max-width:980px){.flow,.calc{grid-template-columns:1fr}.grid6{grid-template-columns:1fr 1fr}.three{grid-template-columns:1fr}}
+@media(max-width:640px){
+ .nav a.l{display:none}.brand{padding:0 8px 0 6px}
+ .grid6{grid-template-columns:1fr}.rc{min-height:0}
+ .subs{bottom:16vh}.final{bottom:5vh}
+ .stmt{top:44%}
+}
+@media(prefers-reduced-motion:reduce){.ar,.res i,.slot{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div id="bg"></div><div id="bgB"></div><div id="grain"></div>
+
+<header class="nav">
+ <a class="brand" href="#top" aria-label="accrue"><svg viewBox="-40 -40 80 80" aria-hidden="true"><path class="tf" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>accrue</a>
+ <a class="l" href="#how">Vault</a><a class="l" href="#demo">Staking</a><a class="l" href="#faq">Docs</a>
+ <button class="pill acc" data-buy>Buy</button>
+ <a class="pill dk" data-x href="#" target="_blank" rel="noopener">X</a>
+</header>
+
+<main id="top">
+<section id="hero">
+ <div class="stage">
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <h1 class="h1" id="h1">Every trade<br>pays.</h1>
+  <div class="subs" id="subs"><span>Creator fees fill the Vault.</span><span>You stake, you collect the SOL.</span><span class="a">Part of it burns $ACCRUE.</span></div>
+  <div class="stmt" id="stmt" aria-label="Hold it. Stake it. Get paid when anyone trades."></div>
+  <div class="final" id="final">
+   <p>Collected creator fees split 60% to staking, 20% to buyback and burn, and 20% to the treasury. Stake $ACCRUE and the SOL streams to you every second.</p>
+   <div class="row"><button class="pill acc lg" data-buy>Buy $ACCRUE</button><a class="t" href="#how">See where the money goes</a></div>
+  </div>
+ </div>
+</section>
+
+<section class="s" id="how">
+ <div class="wrap">
+  <div class="hd"><h2>Where every trade goes.</h2><p>Creator fees are collected in SOL; the Vault applies the split.</p></div>
+  <div class="card flow">
+   <canvas id="fc" width="1280" height="860" aria-label="Diagram: trades fill the Vault, the Vault splits 60/20/20"></canvas>
+   <div>
+    <ol class="steps" id="steps">
+     <li class="on"><span class="n">01</span><h3>A trade comes in</h3><p>Every buy and every sell pays a creator fee in SOL. It drops toward the Vault.</p></li>
+     <li><span class="n">02</span><h3>The bot collects</h3><p>Creator fees wait on the pad until collection. The Vault receives SOL when the bot collects the available fees.</p></li>
+     <li><span class="n">03</span><h3>Each collection splits</h3><p>60% enters the staking reserve, 20% funds buybacks and 20% is paid to the treasury.</p></li>
+     <li><span class="n">04</span><h3>Staking pays gradually</h3><p>The staking reserve releases 40% of its remaining balance per day while tokens are staked. Without stakers, it waits.</p></li>
+    </ol>
+    <div class="bar"><i id="bari"></i></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="s" id="rules">
+ <div class="wrap">
+  <div class="hd"><h2>What the contract does.</h2><p>Launch rules, published before anything is live. Staking goes live after launch; until then this page is the spec.</p></div>
+  <div class="grid6">
+   <article class="card rc"><div class="dg"><span class="nd">Buys</span><span class="nd">Sells</span><span class="ar"></span><span class="nd c a">Vault</span><span class="ar"></span><span class="nd">Stakers</span><span class="tag">SOL from trades · 0 minted</span></div><h3>Paid in SOL, not in more tokens</h3><p>Stakers earn the SOL that trading brings in. Nothing is minted, so your reward never comes from diluting you.</p></article>
+   <article class="card rc"><div class="dg"><span class="nd">Deposit</span><span class="ar"></span><span class="nd c a">10 min</span><span class="ar"></span><span class="nd">Your wallet</span></div><h3>Out when you want</h3><p>Withdraw and claim 10 minutes after your last deposit. A top-up restarts the timer for the whole position.</p></article>
+   <article class="card rc"><div class="dg"><div class="res"><i></i></div><span class="nd a">40% / day</span><span class="ar"></span><span class="nd">You</span><span class="tag">every second</span></div><h3>Earning from the first second</h3><p>Your share builds up every second, lock included.</p></article>
+   <article class="card rc"><div class="dg"><span class="nd">position</span><span class="nd a slot">$ACCRUE</span><span class="nd">SOL</span><span class="tag">$ACCRUE out, SOL stays</span></div><h3>Unstake, keep the SOL</h3><p>Taking your $ACCRUE out never forfeits the SOL you earned. It stays claimable, even at zero stake.</p></article>
+   <article class="card rc"><div class="dg"><span class="nd c a">Vault</span><span class="ar"></span><span style="display:flex;flex-direction:column;gap:6px"><span class="nd strike">7aF…c91e</span><span class="nd">3bK…04fa</span></span><span class="tag">only you pick it</span></div><h3>Claim to the wallet you choose</h3><p>Send your SOL to any address when you claim. Only you can claim it.</p></article>
+   <article class="card rc"><div class="dg"><div class="bars"><div style="height:18%"><span>10k</span></div><div style="height:42%"><span>40k</span></div><div style="height:66%"><span>90k</span></div><div style="height:90%"><span>160k</span></div></div><span class="tag">same rate per $ACCRUE</span></div><h3>Same rate for every $ACCRUE</h3><p>Your cut is your stake over all stakes. No tiers, no boosts, no early bonus.</p></article>
+  </div>
+ </div>
+</section>
+
+<section class="s" id="calc">
+ <div class="wrap">
+  <div class="hd"><h2>What the volume pays you.</h2><p>Pick a daily volume and your share of the stake. No APR, only the formula.</p></div>
+  <div class="card calc">
+   <div class="ctrl">
+    <label><div class="lab"><span>Volume traded per day</span><b id="vV"></b></div><input type="range" id="rV" min="10000" max="5000000" step="10000" value="500000"></label>
+    <label><div class="lab"><span>Creator fee on volume</span><b id="vF"></b></div><input type="range" id="rF" min="0.05" max="1" step="0.05" value="0.5"></label>
+    <label><div class="lab"><span>Your share of staked $ACCRUE</span><b id="vS"></b></div><input type="range" id="rS" min="0.1" max="10" step="0.1" value="1"></label>
+    <div class="note">A scenario, not your live position. No fixed APR. The fee is set by the pad and is your guess here.</div>
+   </div>
+   <div class="out">
+    <div class="seg" id="hz" role="group" aria-label="Horizon"><button data-d="30" class="on">A month</button><button data-d="7">A week</button><button data-d="1">A day</button></div>
+    <div class="small" style="margin-top:20px" id="hzL">A month, for you, if the volume holds</div>
+    <div class="big" id="outV">$0</div>
+    <div class="small" id="outF"></div>
+    <div class="chart" id="chart"><svg viewBox="0 0 560 220" id="csvg" preserveAspectRatio="none"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b57" stop-opacity=".45"/><stop offset="1" stop-color="#ff6b57" stop-opacity="0"/></linearGradient></defs><path id="ar" fill="url(#g1)"/><path id="ln" fill="none" stroke="#ff6b57" stroke-width="3" vector-effect="non-scaling-stroke"/><line id="mk" y1="0" y2="220" stroke="rgba(255,255,255,.45)" stroke-width="1" vector-effect="non-scaling-stroke"/><circle id="dot" r="6" fill="#fff"/></svg><div class="d"><span>Now</span><span>D15</span><span>D30</span></div></div>
+    <input type="range" id="rD" min="1" max="30" value="30" aria-label="Day" style="margin-top:6px">
+    <div class="note" id="dnote"></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="s" id="demo">
+ <div class="wrap">
+  <div class="hd"><h2>Three moves.<br>Then the SOL comes to you.</h2><p>Try the simulation. No real tokens, rewards or signatures.</p></div>
+  <div class="card demo">
+   <div class="wal"><span class="chip">Demonstration</span><div class="k">SOL<b id="wS">5.0000</b></div><div class="k">$ACCRUE<b id="wT">0</b></div><div class="k">Staked<b id="wK">0</b></div><span class="sp"></span><button class="lnk" id="rs">Reset</button></div>
+   <div class="three">
+    <div class="mv"><h3>Buy</h3><p>Every buy pays a creator fee. Most of it drops into the Vault, in SOL.</p>
+     <label class="lab" style="margin:0"><span>You buy with</span><b id="bA">1.0 SOL</b></label><input type="range" id="rB" min="0.1" max="5" step="0.1" value="1">
+     <div class="kv"><span>Creator fee, 1%</span><b id="bF"></b></div><div class="kv"><span>Into the Vault</span><b id="bV"></b></div><div class="kv"><span>You get</span><b id="bG"></b></div>
+     <button class="btn acc" id="bB">Buy $ACCRUE</button></div>
+    <div class="mv"><h3>Stake</h3><p>Put your $ACCRUE in. Your share of the pool is your share of every payout.</p>
+     <div class="rg"><svg class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/><circle id="rg" cx="50" cy="50" r="42" fill="none" stroke="#ff6b57" stroke-width="10" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/></svg><div><div class="kv" style="display:block"><b id="sP" style="font-size:24px">0.0%</b></div><div class="note">of the pool</div></div></div>
+     <label class="lab" style="margin:0"><span>Stake <span id="sL">100</span>% of your $ACCRUE</span></label><input type="range" id="rK" min="1" max="100" step="1" value="100">
+     <button class="btn" id="bK" disabled>Stake</button><div class="note" id="sN">Buy some $ACCRUE first.</div>
+     <div class="note">400,000 $ACCRUE already staked by others in this demo.</div></div>
+    <div class="mv"><h3>Claim</h3><p>SOL piles up by the second. Take it any time, from 10 minutes after your last deposit.</p>
+     <div class="kv" style="display:block"><span>Claimable now</span><b id="cA" style="display:block;font-size:30px;letter-spacing:-.03em;margin-top:4px;font-family:'Hanken Grotesk'">0.00000 SOL</b></div>
+     <button class="btn" id="bC" disabled>Claim</button><div class="note" id="cN">Buy and stake first.</div>
+     <button class="lnk" id="bW" style="align-self:flex-start" hidden>Withdraw my $ACCRUE</button></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="s" id="faq">
+ <div class="wrap">
+  <div class="hd"><h2>Before you buy.</h2></div>
+  <div class="faq">
+   <details><summary>What is the Vault, exactly?</summary><p>A wallet that collects creator fees from $ACCRUE trading. Each collection splits 60% to the staking reserve, 20% to buyback and burn and 20% to the treasury.</p></details>
+   <details><summary>What does a trade cost?</summary><p>The pad's normal trading fee. The creator-fee part of it is what flows to the Vault. $ACCRUE adds no transfer tax on top.</p></details>
+   <details><summary>Where do I buy?</summary><p>On pump.fun, with the address shown on this page. Copy it from the site and check it against the pinned post on X.</p></details>
+   <details><summary>Do I have to do anything to get paid?</summary><p>Stake and claim. Staking is opt-in: tokens that are not staked earn nothing.</p></details>
+   <details><summary>When can I claim?</summary><p>10 minutes after your last deposit. A top-up restarts the timer.</p></details>
+   <details><summary>Can I get my $ACCRUE back whenever I want?</summary><p>Yes, after the same 10 minutes. The SOL you earned stays claimable even at zero stake.</p></details>
+   <details><summary>What if I stake after everyone else?</summary><p>The rate per token is the same for every staker. You earn from the moment you stake, not from before it.</p></details>
+   <details><summary>What happens if trading stops?</summary><p>No new fees means no new reserve. The reserve keeps releasing what it already holds at 40% a day, a little less each day.</p></details>
+   <details><summary>Does the burn make the price go up?</summary><p>No promise. The burn removes tokens from supply; the price depends on demand.</p></details>
+  </div>
+ </div>
+</section>
+
+<section class="cta">
+ <h2>Your move.</h2>
+ <p>Every trade pays someone. Make it you.</p>
+ <div class="row"><button class="pill acc lg" data-buy>Buy $ACCRUE</button><a class="pill dk lg" href="#demo">Stake</a></div>
+</section>
+</main>
+
+<footer>
+ <div class="wrap">
+  <div class="fr">
+   <a class="brand" href="#top" style="padding:0"><svg viewBox="-40 -40 80 80" aria-hidden="true"><path class="tf" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>accrue</a>
+   <nav><a href="#" data-buy>Buy</a><a href="#demo">Staking</a><a href="#how">Vault</a><a href="#faq">Docs</a><a href="#rules">Rules</a><em>At launch</em></nav>
+  </div>
+  <div class="cab"><span>Contract</span><code id="caF">Posts at launch</code><button class="cp" data-copy>Copy</button></div>
+  <p class="disc"><b>Disclaimer.</b> $ACCRUE is an experimental token and nothing on this site is investment advice. Crypto assets are volatile and can lose all of their value. Rates, splits and figures on this page are launch design or examples, not live data.</p>
+ </div>
+</footer>
+
+<div class="mdl" id="mdl" role="dialog" aria-modal="true" aria-labelledby="mt">
+ <div class="mb"><button class="x" id="mx" aria-label="Close">×</button>
+  <h3 id="mt">Buy $ACCRUE</h3><p>Copy the address, then buy on one of these apps.</p>
+  <div class="cabx"><span id="caM">Posts at launch</span><button class="cp" data-copy>Copy</button></div>
+  <div class="ap"><a data-pf href="#" target="_blank" rel="noopener">pump.fun</a><a data-gm href="#" target="_blank" rel="noopener">GMGN</a><a href="https://axiom.trade" target="_blank" rel="noopener">Axiom</a><a href="https://photon-sol.tinyastro.io" target="_blank" rel="noopener">Photon</a></div>
+ </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
+var clamp=function(v,a,b){return Math.min(b,Math.max(a,v))},lerp=function(a,b,t){return a+(b-a)*t};
+var sm=function(a,b,x){var t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* config wiring */
+var C=window.ACCRUE_CFG||{};var ca=(C.CA||'').trim();
+var buy=C.BUY||(ca?'https://pump.fun/coin/'+ca:'');
+var chart=C.CHART||(ca?'https://gmgn.ai/sol/token/'+ca:'');
+var xurl=C.X||'';
+function wire(sel,u){$$(sel).forEach(function(a){if(u){a.href=u}else{a.removeAttribute('target');a.addEventListener('click',function(e){e.preventDefault()})}})}
+wire('[data-x]',xurl);wire('[data-pf]',buy);wire('[data-gm]',chart);
+$('#caF').textContent=ca||'Posts at launch';$('#caM').textContent=ca||'Posts at launch';
+$$('[data-copy]').forEach(function(b){b.addEventListener('click',function(){if(!ca)return;try{navigator.clipboard.writeText(ca)}catch(e){}var t=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=t},1200)})});
+
+/* modal */
+var mdl=$('#mdl'),last=null;
+function openM(){last=document.activeElement;mdl.classList.add('on');$('#mx').focus()}
+function closeM(){mdl.classList.remove('on');if(last)last.focus()}
+$$('[data-buy]').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();openM()})});
+$('#mx').addEventListener('click',closeM);mdl.addEventListener('click',function(e){if(e.target===mdl)closeM()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeM()});
+
+/* trefoil path for the mark */
+function tref(){var d='',n=160;for(var i=0;i<=n;i++){var t=i/n*Math.PI*2;var x=Math.sin(t)+2*Math.sin(2*t),y=Math.cos(t)-2*Math.cos(2*t);d+=(i?'L':'M')+(x*11.5).toFixed(1)+' '+(y*11.5).toFixed(1)}return d+'Z'}
+var td=tref();$$('.tf').forEach(function(p){p.setAttribute('d',td)});
+
+/* statement words */
+var words='Hold it. Stake it. Get paid when anyone trades.'.split(' ');
+var stmt=$('#stmt');words.forEach(function(w,i){var s=document.createElement('span');s.className='w';s.textContent=w+(i<words.length-1?' ':'');stmt.appendChild(s)});
+var wEls=$$('.w',stmt);
+
+/* three.js hero */
+var gl=$('#gl'),R=null,mesh=null,cam=null,scene=null;
+function initGL(){
+ if(!window.THREE)return false;
+ try{
+  var T=THREE;R=new T.WebGLRenderer({canvas:gl,antialias:true,alpha:true,powerPreference:'high-performance'});
+ }catch(e){return false}
+ var T=THREE;R.setPixelRatio(Math.min(devicePixelRatio||1,2));R.outputEncoding=T.sRGBEncoding;R.toneMapping=T.ACESFilmicToneMapping;R.toneMappingExposure=1.15;
+ scene=new T.Scene();cam=new T.PerspectiveCamera(34,1,.1,50);cam.position.set(0,0,8);
+ /* procedural studio environment */
+ var c=document.createElement('canvas');c.width=1024;c.height=512;var g=c.getContext('2d');
+ var gr=g.createLinearGradient(0,0,0,512);gr.addColorStop(0,'#1a2624');gr.addColorStop(.5,'#0a100f');gr.addColorStop(1,'#050808');g.fillStyle=gr;g.fillRect(0,0,1024,512);
+ function box(x,y,w,h,col,a){g.globalAlpha=a;g.fillStyle=col;g.fillRect(x,y,w,h);g.globalAlpha=1}
+ box(80,60,260,90,'#ffffff',.95);box(520,40,200,60,'#fff3ea',.85);box(760,150,40,260,'#ff6b57',.95);box(180,300,300,26,'#ff8a73',.8);box(880,60,90,40,'#bfeee6',.8);box(420,420,180,30,'#ffffff',.5);box(0,230,1024,6,'#2a3b38',1);
+ var tex=new T.CanvasTexture(c);tex.mapping=T.EquirectangularReflectionMapping;
+ var pm=new T.PMREMGenerator(R);var env=pm.fromEquirectangular(tex).texture;scene.environment=env;pm.dispose();
+ var geo=new T.TorusKnotGeometry(1.15,.42,320,72,2,3);
+ var mat=new T.MeshPhysicalMaterial({color:0x040505,roughness:.1,metalness:.05,clearcoat:1,clearcoatRoughness:.04,envMapIntensity:1.5});
+ mesh=new T.Mesh(geo,mat);scene.add(mesh);
+ var l1=new T.PointLight(0xff6b57,2.2,30);l1.position.set(4,2,3);scene.add(l1);
+ var l2=new T.PointLight(0x7fe9d8,1.1,30);l2.position.set(-4,-2,4);scene.add(l2);
+ rs();addEventListener('resize',rs);return true;
+}
+function rs(){if(!R)return;var w=gl.clientWidth||innerWidth,h=gl.clientHeight||innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.position.z=w/h>=1.2?8:8+(1.2-w/h)*7.5;cam.updateProjectionMatrix()}
+var hasGL=initGL();
+
+/* scroll loop */
+var hero=$('#hero'),h1=$('#h1'),subs=$('#subs'),fin=$('#final'),bgB=$('#bgB');
+var P=0,t0=performance.now(),mix=0;
+function prog(){var r=hero.getBoundingClientRect();return clamp(-r.top/(r.height-innerHeight),0,1)}
+function frame(now){
+ var tt=(now-t0)/1000;P=prog();
+ var ph=sm(.1,.24,P);
+ h1.style.opacity=1-ph;h1.style.transform='translateY('+(-52-ph*8)+'%) scale('+(1+ph*.06)+')';
+ subs.style.opacity=1-sm(.08,.2,P);
+ wEls.forEach(function(w,i){var a=.4+i*(.26/wEls.length);w.style.opacity=lerp(.14,1,sm(a,a+.05,P))});
+ stmt.style.opacity=sm(.36,.42,P)*(1-sm(.9,.98,P)*0);
+ var fo=sm(.8,.9,P);fin.style.opacity=fo;fin.style.pointerEvents=fo>.5?'auto':'none';fin.style.visibility=fo>.01?'visible':'hidden';
+ mix=Math.max(mix*0,sm(.14,.5,P));if(P>=1)mix=1;bgB.style.opacity=(window.scrollY>innerHeight*.5&&P>=.99)?1:mix;
+ if(hasGL){
+  var sc=lerp(1,1.28,sm(.18,.5,P));mesh.scale.setScalar(sc);
+  mesh.rotation.y=(reduce?0:tt*.22)+P*Math.PI*2.2;mesh.rotation.x=.45+P*.9;mesh.rotation.z=P*.5;
+  mesh.position.y=lerp(0,.1,sm(0,.4,P));
+  gl.style.opacity=lerp(1,.28,sm(.36,.5,P))*(1-sm(.92,1,P)*.0);
+  /* keep it visible only while the hero is on screen */
+  var rr=hero.getBoundingClientRect();var vis=rr.bottom>0&&rr.top<innerHeight;
+  if(vis)R.render(scene,cam);
+ }
+ requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* flow diagram */
+var fc=$('#fc'),fx=fc.getContext('2d'),W=640,H=430,S=2;
+var steps=$$('#steps li'),bari=$('#bari'),phase=0,ph0=performance.now(),pT=3200,paused=0;
+function setPhase(i){phase=i;ph0=performance.now();steps.forEach(function(s,j){s.classList.toggle('on',j===i)});bari.style.width=((i+1)*25)+'%'}
+steps.forEach(function(s,i){s.addEventListener('click',function(){setPhase(i)})});
+var parts=[],fill=.08,res=.0,lastSpawn=0,ACC='#ff6b57';
+var VC={x:210,y:250,r:78},NS={x:440,y:128},NB={x:440,y:250},NT={x:440,y:372},YOU={x:590,y:128};
+function spawn(from,to,col,kind){parts.push({a:from,b:to,t:0,v:.55+Math.random()*.35,c:col||ACC,k:kind||0,o:(Math.random()-.5)*14})}
+var fsk=1,nar=false;function fitF(){var cw=fc.clientWidth||640;nar=cw<520;fsk=nar?clamp(640/cw*.72,1,1.45):1}fitF();addEventListener('resize',fitF);
+var vis=true;if('IntersectionObserver' in window){new IntersectionObserver(function(e){vis=e[0].isIntersecting},{threshold:0}).observe(fc)}
+function circ(x,y,r,fillc,line,lw){fx.beginPath();fx.arc(x,y,r,0,7);if(fillc){fx.fillStyle=fillc;fx.fill()}if(line){fx.strokeStyle=line;fx.lineWidth=lw||1;fx.stroke()}}
+function node(n,label,pct,lvl){
+ fx.save();fx.fillStyle='rgba(255,255,255,.04)';fx.strokeStyle='rgba(255,255,255,.18)';fx.lineWidth=1;
+ fx.beginPath();fx.roundRect?fx.roundRect(n.x-58,n.y-30,116,60,14):fx.rect(n.x-58,n.y-30,116,60);fx.fill();fx.stroke();
+ fx.save();fx.beginPath();fx.roundRect?fx.roundRect(n.x-58,n.y-30,116,60,14):fx.rect(n.x-58,n.y-30,116,60);fx.clip();
+ fx.fillStyle='rgba(255,107,87,.32)';fx.fillRect(n.x-58,n.y+30-60*lvl,116,60*lvl);fx.restore();
+ fx.fillStyle='#ecf3f0';fx.font='500 '+(13*fsk)+'px DM Mono, monospace';fx.textAlign='center';fx.fillText(nar?label.split(' ')[0]:label,n.x,n.y-4);
+ fx.fillStyle=ACC;fx.font='500 '+(12*fsk)+'px DM Mono, monospace';fx.fillText(pct,n.x,n.y+16);fx.restore()}
+var lvS=0,lvB=0,lvT=0,burn=[];
+function fdraw(now){
+ requestAnimationFrame(fdraw);if(!vis)return;
+ var el=now-ph0;if(el>pT&&!paused)setPhase((phase+1)%4);
+ var dt=16/1000;
+ fc.width=W*S;fc.height=H*S;fx.setTransform(S,0,0,S,0,0);fx.clearRect(0,0,W,H);
+ /* top lane */
+ fx.fillStyle='rgba(236,243,240,.6)';fx.font='500 '+(12*fsk)+'px DM Mono, monospace';fx.textAlign='left';fx.fillText('Every buy and sell',22,34);
+ fx.strokeStyle='rgba(255,255,255,.12)';fx.beginPath();fx.moveTo(22,52);fx.lineTo(W-22,52);fx.stroke();
+ /* spawn */
+ var rate=phase===0?160:phase===1?110:phase===2?420:260;
+ if(now-lastSpawn>rate&&phase<2){lastSpawn=now;spawn({x:30+Math.random()*30,y:52},{x:VC.x+(Math.random()-.5)*40,y:VC.y-VC.r+8},ACC,0)}
+ if(phase===2&&now-lastSpawn>130){lastSpawn=now;spawn({x:VC.x+VC.r*.7,y:VC.y-20},NS,ACC,1);if(Math.random()<.7)spawn({x:VC.x+VC.r,y:VC.y},NB,'#ffb199',2);if(Math.random()<.7)spawn({x:VC.x+VC.r*.7,y:VC.y+25},NT,'#9be8da',1)}
+ if(phase===3&&now-lastSpawn>120){lastSpawn=now;spawn({x:NS.x+58,y:NS.y},YOU,ACC,3)}
+ /* vault level */
+ if(phase===2){fill=Math.max(.06,fill-dt*.16)}else if(phase===3){fill=Math.max(.06,fill-dt*.03)}else{fill=Math.min(.95,fill+dt*(phase===1?.1:.045))}
+ lvS=lerp(lvS,phase>=2?(phase===3?.55:.5):(phase===0?.1:.12),.02);lvB=lerp(lvB,phase>=2?.45:0,.02);lvT=lerp(lvT,phase>=2?.45:0,.02);
+ if(phase<2){lvS=lerp(lvS,.1,.05);lvB=lerp(lvB,0,.1);lvT=lerp(lvT,0,.1)}
+ /* guides in phase 2/3 */
+ if(phase>=2){fx.strokeStyle='rgba(255,107,87,.22)';fx.setLineDash([4,6]);[[NS],[NB],[NT]].forEach(function(n){fx.beginPath();fx.moveTo(VC.x+VC.r,VC.y);fx.lineTo(n[0].x-58,n[0].y);fx.stroke()});fx.setLineDash([])}
+ /* vault */
+ var pulse=phase===1?(.5+.5*Math.sin(now/180)):0;
+ var g=fx.createRadialGradient(VC.x,VC.y,VC.r*.6,VC.x,VC.y,VC.r*2.1);g.addColorStop(0,'rgba(255,107,87,'+(.12+.2*pulse+fill*.14)+')');g.addColorStop(1,'rgba(255,107,87,0)');fx.fillStyle=g;fx.fillRect(0,0,W,H);
+ fx.save();fx.beginPath();fx.arc(VC.x,VC.y,VC.r-2,0,7);fx.clip();
+ var ly=VC.y+VC.r-(VC.r*2)*fill,wv=Math.sin(now/420)*3;
+ var lg=fx.createLinearGradient(0,ly,0,VC.y+VC.r);lg.addColorStop(0,'#ff8a73');lg.addColorStop(1,'#a8402f');fx.fillStyle=lg;
+ fx.beginPath();fx.moveTo(VC.x-VC.r,VC.y+VC.r);fx.lineTo(VC.x-VC.r,ly);
+ for(var x=-VC.r;x<=VC.r;x+=8){fx.lineTo(VC.x+x,ly+Math.sin(x/16+now/380)*3+wv*.2)}
+ fx.lineTo(VC.x+VC.r,VC.y+VC.r);fx.closePath();fx.fill();fx.restore();
+ circ(VC.x,VC.y,VC.r,null,'rgba(255,255,255,'+(.25+.3*pulse)+')',1.5+pulse*1.5);
+ fx.fillStyle='#fff';fx.textAlign='center';fx.font='700 '+(17*fsk)+'px Hanken Grotesk, sans-serif';fx.fillText('The Vault',VC.x,VC.y-4);
+ fx.font='500 '+(11*fsk)+'px DM Mono, monospace';fx.fillStyle='rgba(255,255,255,.8)';fx.fillText(nar?'splits fees':'splits at collection',VC.x,VC.y+14*fsk);
+ if(phase===1){fx.strokeStyle='rgba(255,107,87,'+(.5-.5*((now-ph0)%1000)/1000)+')';fx.lineWidth=2;fx.beginPath();fx.arc(VC.x,VC.y,VC.r+8+((now-ph0)%1000)/1000*26,0,7);fx.stroke();
+  fx.fillStyle='rgba(236,243,240,.7)';fx.font='500 '+(11*fsk)+'px DM Mono, monospace';fx.fillText('bot collects fees',VC.x,VC.y+VC.r+34)}
+ node(NS,'Staking reserve','60%',lvS);node(NB,'Buyback & burn','20%',lvB);node(NT,'Treasury','20%',lvT);
+ fx.fillStyle='#ecf3f0';fx.font='700 '+(14*fsk)+'px Hanken Grotesk, sans-serif';fx.textAlign='center';fx.fillText('You',YOU.x,YOU.y-4);
+ fx.fillStyle='rgba(236,243,240,.55)';fx.font='500 '+(10.5*fsk)+'px DM Mono, monospace';fx.fillText('per second',YOU.x,YOU.y+12*fsk);
+ if(phase===3){fx.strokeStyle='rgba(255,107,87,.35)';fx.setLineDash([3,5]);fx.beginPath();fx.moveTo(NS.x+58,NS.y);fx.lineTo(YOU.x-26,YOU.y);fx.stroke();fx.setLineDash([]);
+  fx.fillStyle='rgba(236,243,240,.75)';fx.font='500 '+(11*fsk)+'px DM Mono, monospace';fx.fillText(nar?'40% / day':'40% of the reserve / day',NS.x+75,NS.y-34)}
+ /* particles */
+ for(var i=parts.length-1;i>=0;i--){var p=parts[i];p.t+=dt*p.v;if(p.t>=1){parts.splice(i,1);continue}
+  var e=p.t*p.t*(3-2*p.t),x=lerp(p.a.x,p.b.x,e)+p.o*Math.sin(p.t*3.14),y=lerp(p.a.y,p.b.y,e);
+  var a=p.k===2&&p.t>.8?(1-p.t)*5:1;circ(x,y,3.4,p.c);fx.globalAlpha=.25*a;circ(x,y,8,p.c);fx.globalAlpha=1}
+ if(parts.length>160)parts.splice(0,40);
+}
+requestAnimationFrame(fdraw);setPhase(0);
+
+/* calculator */
+var rV=$('#rV'),rF=$('#rF'),rS=$('#rS'),rD=$('#rD'),cum=[],cur=30;
+function fm(n){return '$'+Math.round(n).toLocaleString('en-US')}
+function paint(r){var mn=+r.min,mx=+r.max;r.style.setProperty('--v',((r.value-mn)/(mx-mn)*100)+'%')}
+function calc(){
+ var V=+rV.value,f=+rF.value/100,s=+rS.value/100,I=V*f*.6,Rr=0,y=0;cum=[0];
+ for(var d=1;d<=30;d++){Rr+=I;var rel=.4*Rr;Rr-=rel;y+=s*rel;cum.push(y)}
+ $('#vV').textContent=fm(V);$('#vF').textContent=(+rF.value).toFixed(2)+'%';$('#vS').textContent=(+rS.value).toFixed(1)+'%';
+ [rV,rF,rS,rD].forEach(paint);
+ var day=+rD.value;$('#outV').textContent=fm(cum[day]);
+ $('#outF').textContent='Settles at '+fm(s*I)+' per day = '+fm(V)+' × '+(+rF.value).toFixed(2)+'% × 60% × '+(+rS.value).toFixed(1)+'%, paid in SOL';
+ var lbl=day===30?'A month':day===7?'A week':day===1?'A day':'Day '+day;$('#hzL').textContent=lbl+', for you, if the volume holds';
+ $$('#hz button').forEach(function(b){b.classList.toggle('on',+b.dataset.d===day)});
+ $('#dnote').textContent='Drag the curve. Day one pays '+fm(cum[1])+', about 40% of that day’s share: the reserve releases 40% of what it holds each day, so payouts ramp toward '+fm(s*I)+' a day.';
+ var mxv=Math.max(cum[30],1),pts=[];for(var d2=0;d2<=30;d2++)pts.push([d2/30*560,210-(cum[d2]/mxv)*190]);
+ var dd=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}).join('');
+ $('#ln').setAttribute('d',dd);$('#ar').setAttribute('d',dd+'L560 220L0 220Z');
+ var pp=pts[day];$('#mk').setAttribute('x1',pp[0]);$('#mk').setAttribute('x2',pp[0]);$('#dot').setAttribute('cx',pp[0]);$('#dot').setAttribute('cy',pp[1]);
+}
+[rV,rF,rS,rD].forEach(function(r){r.addEventListener('input',calc)});
+$$('#hz button').forEach(function(b){b.addEventListener('click',function(){rD.value=b.dataset.d;calc()})});
+var chartEl=$('#chart');function drag(e){var r=chartEl.getBoundingClientRect(),x=clamp((e.clientX-r.left-12)/(r.width-24),0,1);rD.value=Math.max(1,Math.round(x*30));calc()}
+chartEl.addEventListener('pointerdown',function(e){chartEl.setPointerCapture(e.pointerId);drag(e);chartEl.onpointermove=drag});
+chartEl.addEventListener('pointerup',function(){chartEl.onpointermove=null});
+calc();
+
+/* demo */
+var st={sol:5,tok:0,stk:0,clm:0},OTH=400000;
+function f4(n){return n.toFixed(4)}function fn(n){return Math.round(n).toLocaleString('en-US')}
+function share(){return st.stk/(st.stk+OTH)}
+function dm(){
+ var rB=$('#rB');rB.max=Math.max(.1,Math.floor(st.sol*10)/10);if(+rB.value>+rB.max)rB.value=rB.max;
+ var a=+rB.value,fe=a*.01;
+ $('#wS').textContent=f4(st.sol);$('#wT').textContent=fn(st.tok);$('#wK').textContent=fn(st.stk);
+ $('#bA').textContent=a.toFixed(1)+' SOL';$('#bF').textContent=fe.toFixed(4)+' SOL';$('#bV').textContent=fe.toFixed(4)+' SOL';$('#bG').textContent=fn((a-fe)*100000)+' $ACCRUE';
+ $('#bB').disabled=st.sol<.1;paint(rB);
+ var pct=+$('#rK').value;$('#sL').textContent=pct;paint($('#rK'));
+ $('#bK').disabled=st.tok<1;$('#sN').textContent=st.tok<1?(st.stk?'All staked.':'Buy some $ACCRUE first.'):'';
+ var sh=share()*100;$('#sP').textContent=sh.toFixed(1)+'%';$('#rg').setAttribute('stroke-dashoffset',264-264*share());
+ $('#cA').textContent=st.clm.toFixed(5)+' SOL';$('#bC').disabled=st.clm<=0;
+ $('#cN').textContent=st.stk?(st.clm>0?'':'Earning…'):'Buy and stake first.';$('#bW').hidden=!st.stk;
+}
+$('#rB').addEventListener('input',dm);$('#rK').addEventListener('input',dm);
+$('#bB').addEventListener('click',function(){var a=+$('#rB').value;if(a>st.sol)return;st.sol-=a;st.tok+=(a-a*.01)*100000;dm()});
+$('#bK').addEventListener('click',function(){var n=Math.floor(st.tok*(+$('#rK').value)/100);if(n<1)return;st.tok-=n;st.stk+=n;dm()});
+$('#bC').addEventListener('click',function(){st.sol+=st.clm;st.clm=0;dm()});
+$('#bW').addEventListener('click',function(){st.tok+=st.stk;st.stk=0;dm()});
+$('#rs').addEventListener('click',function(){st={sol:5,tok:0,stk:0,clm:0};$('#rB').value=1;$('#rK').value=100;dm()});
+setInterval(function(){if(st.stk){st.clm+=share()*.0012;dm()}},500);
+dm();
+})();
+</script>
+</body>
+</html>
